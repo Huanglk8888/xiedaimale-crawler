@@ -55,7 +55,7 @@ public class Main {
         }
     }
 
-    private static Document httpGetAndParseHtml(String link) {
+    private static Document httpGetAndParseHtml(String link) throws IOException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         System.out.println(link);
         if (link.startsWith("//")) {
