@@ -9,6 +9,12 @@ public class News {
    /* private Date createdAt;
     private Date modifiedAt;*/
 
+    public News(String url, String content, String title) {
+        this.url = url;
+        this.content = content;
+        this.title = title;
+    }
+
     public Integer getId() {
         return id;
     }
