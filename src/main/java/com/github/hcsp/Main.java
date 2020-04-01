@@ -14,57 +14,56 @@ import org.jsoup.nodes.Element;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Collectors;
 
 public class Main {
     private static final String username = "root";
     private static final String password = "123456";
 
-    private static List<String> loadUrlFromDatabase(Connection connection, String sql) throws SQLException {
+    private static String getNextLink(Connection connection, String sql) throws SQLException {
         ResultSet set = null;
-        List<String> results = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             set = statement.executeQuery();
             while (set.next()) {
-                results.add(set.getString(1));
+                return set.getString(1);
             }
         } finally {
             if (set != null) {
                 set.close();
             }
         }
-        return results;
+        return null;
+    }
+
+    private static String getNextLinkThenDelete(Connection connection) throws SQLException {
+        String link = getNextLink(connection, "select LINK from LINKS_TO_BE_PROCESSED LIMIT 1");
+        if (link != null) {
+            updateDatabase(connection, link, "delete from LINKS_TO_BE_PROCESSED where  LINK = ?");
+        }
+        return link;
     }
 
     @SuppressFBWarnings("DMI_CONSTANT_DB_PASSWORD")
     public static void main(String[] args) throws IOException, SQLException {
-        Connection connection = DriverManager.getConnection("jdbc:h2:file:D:/java/produce/yinghe/xiedaimale-crawler/target/news", username, password);
-
-        while (true) {
-            //待处理的链接池
-            //从数据库加载即将处理的链接的代码
-            List<String> linkPool = loadUrlFromDatabase(connection, "select LINK from LINKS_TO_BE_PROCESSED");
-            if (linkPool.isEmpty()) {
-                break;
-            }
-            //从待处理池子种拿一个出来
-            String link = linkPool.remove(linkPool.size() - 1);
-            //处理完后从池子和数据库种删除
-            insertLinkIntoDatabase(connection, link, "delete from LINKS_TO_BE_PROCESSED where  LINK = ?");
+        Connection connection = DriverManager.getConnection("jdbc:h2:file:D:/java/produce/yinghe/xiedaimale-crawler/news", username, password);
+        String link;
+        //先从数据库加载一个链接(拿出来并从数据库种删掉)，能加载到就循环，并处理之
+        while ((link = getNextLinkThenDelete(connection)) != null) {
 
             //询问数据库当前链接有么有被处理过
             if (isLinkProcessed(connection, link)) {
                 continue;
             }
-            //关系news.sina.cn
+            //关心news.sina.cn
             if (isInterestingLink(link)) {
+                System.out.println(link);
                 Document doc = httpGetAndParseHtml(link);
 
                 parseUrlsFromPageAndStoneIntoDatabase(connection, doc);
                 //如果是新闻页面，那就存入数据库
-                stoneIntoDatabaseIfItIsNewsPage(doc);
+                stoneIntoDatabaseIfItIsNewsPage(connection, doc, link);
 
-                insertLinkIntoDatabase(connection, link, "insert into LINKS_ALREADY_PROCESSED (LINK) values (?)");
+                updateDatabase(connection, link, "insert into LINKS_ALREADY_PROCESSED (LINK) values (?)");
             }
         }
     }
@@ -72,7 +71,14 @@ public class Main {
     private static void parseUrlsFromPageAndStoneIntoDatabase(Connection connection, Document doc) throws SQLException {
         for (Element aTag : doc.select("a")) {
             String href = aTag.attr("href");
-            insertLinkIntoDatabase(connection, href, "insert into LINKS_TO_BE_PROCESSED (LINK) values (?)");
+            if (href.startsWith("//")) {
+                href = "https:" + href;
+                System.out.println(href);
+            }
+            if (!href.toLowerCase().startsWith("javascript")) {
+                updateDatabase(connection, href, "insert into LINKS_TO_BE_PROCESSED (LINK) values (?)");
+            }
+
         }
     }
 
@@ -94,7 +100,7 @@ public class Main {
     }
 
     //处理完后从池子和数据库种删除
-    private static void insertLinkIntoDatabase(Connection connection, String link, String sql) throws SQLException {
+    private static void updateDatabase(Connection connection, String link, String sql) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, link);
             statement.executeUpdate();
@@ -102,29 +108,33 @@ public class Main {
     }
 
 
-    private static void stoneIntoDatabaseIfItIsNewsPage(Document doc) {
+    private static void stoneIntoDatabaseIfItIsNewsPage(Connection connection, Document doc, String link) throws SQLException {
         ArrayList<Element> articleTags = doc.select("article");
         if (!articleTags.isEmpty()) {
             for (Element articleTag : articleTags) {
                 String title = articleTags.get(0).child(0).text();
-                System.out.println(title);
+                String content = articleTag.select("p")
+                        .stream().map(Element::text).collect(Collectors.joining("\n"));
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "insert into NEWS (url, TITLE, content, CREATED_AT, MODIFIED_AT) values (?, ?, ?, now(), now())")) {
+                    statement.setString(1, link);
+                    statement.setString(2, title);
+                    statement.setString(3, content);
+                    statement.executeUpdate();
+                }
             }
         }
     }
 
     private static Document httpGetAndParseHtml(String link) throws IOException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
-        System.out.println(link);
-        if (link.startsWith("//")) {
-            link = "https:" + link;
-            System.out.println(link);
-        }
+
         HttpGet httpGet = new HttpGet(link);
         httpGet.addHeader("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36");
 
         try (CloseableHttpResponse response1 = httpclient.execute(httpGet)) {
-            System.out.println(response1.getStatusLine());
             HttpEntity entity1 = response1.getEntity();
             String html = EntityUtils.toString(entity1);
             return Jsoup.parse(html);
