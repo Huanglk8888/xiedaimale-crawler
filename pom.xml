@@ -51,6 +51,12 @@
             <version>3.5.2</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.15</version>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -90,13 +96,6 @@
                     <enableRulesSummary>false</enableRulesSummary>
                 </configuration>
                 <executions>
-<!--                    <execution>-->
-<!--                        <id>compile</id>-->
-<!--                        <phase>compile</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>check</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
                     <execution>
                         <id>verify</id>
                         <phase>verify</phase>
@@ -140,9 +139,9 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>5.2.4</version>
                 <configuration>
-                    <url>jdbc:h2:file:D:/java/produce/yinghe/xiedaimale-crawler/news</url>
+                    <url>jdbc:mysql://192.168.217.132:3306/news</url>
                     <user>root</user>
-                    <password>123456</password>
+                    <password>12345</password>
                 </configuration>
 
             </plugin>

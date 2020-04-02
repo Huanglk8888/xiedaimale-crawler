@@ -10,7 +10,7 @@ public interface CrawlerDao {
 
     void insertNewsIntoDatebase(String url, String title, String content) throws SQLException;
 
-    void insertProcessedLink(String link);
+    void insertProcessedLink(String link) throws SQLException;
 
-    void inserLinkToBeProsessed(String href);
+    void inserLinkToBeProsessed(String href) throws SQLException;
 }

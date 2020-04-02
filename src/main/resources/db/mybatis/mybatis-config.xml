@@ -7,10 +7,10 @@
 		<environment id="development">
 			<transactionManager type="JDBC" />
 			<dataSource type="POOLED">
-				<property name="driver" value="org.h2.Driver" />
-				<property name="url" value="jdbc:h2:file:D:/java/produce/yinghe/xiedaimale-crawler/news" />
+				<property name="driver" value="com.mysql.cj.jdbc.Driver" />
+				<property name="url" value="jdbc:mysql://192.168.217.132:3306/news" />
 				<property name="username" value="root" />
-				<property name="password" value="123456" />
+				<property name="password" value="12345" />
 			</dataSource>
 		</environment>
 

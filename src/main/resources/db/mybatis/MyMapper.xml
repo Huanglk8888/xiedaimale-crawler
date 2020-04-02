@@ -18,7 +18,7 @@
 
 
     <select id="countLink" parameterType="String" resultType="int">
-    select COUNT (LINK) from LINKS_ALREADY_PROCESSED where  LINK = #{link}
+    select COUNT(LINK) from LINKS_ALREADY_PROCESSED where  LINK = #{link}
     </select>
 
     <insert id="insertLink" parameterType="String">

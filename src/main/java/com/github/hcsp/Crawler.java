@@ -35,32 +35,26 @@ public class Crawler {
                 //如果是新闻页面，那就存入数据库
                 stoneIntoDatabaseIfItIsNewsPage(doc, link);
                 dao.insertProcessedLink(link);
-                //dao.updateDatabase(link, "insert into LINKS_ALREADY_PROCESSED (LINK) values (?)");
             }
         }
     }
 
-    public static void main(String[] args) throws IOException, SQLException{
+    public static void main(String[] args) throws IOException, SQLException {
         new Crawler().run();
     }
 
-    private void parseUrlsFromPageAndStoneIntoDatabase(Document doc){
+    private void parseUrlsFromPageAndStoneIntoDatabase(Document doc) throws SQLException {
         for (Element aTag : doc.select("a")) {
             String href = aTag.attr("href");
             if (href.startsWith("//")) {
                 href = "https:" + href;
-                System.out.println(href);
             }
-            if (!href.toLowerCase().startsWith("javascript")) {
+            if (!href.toLowerCase().startsWith("javascript") && (!href.isEmpty())) {
+                System.out.println("inserLinkToBeProsessed---:+" + href);
                 dao.inserLinkToBeProsessed(href);
-                // dao.updateDatabase(href, "insert into LINKS_TO_BE_PROCESSED (LINK) values (?)");
             }
-
         }
     }
-
-    //询问数据库当前链接有么有被处理过
-
 
     private void stoneIntoDatabaseIfItIsNewsPage(Document doc, String link) throws SQLException {
         ArrayList<Element> articleTags = doc.select("article");
