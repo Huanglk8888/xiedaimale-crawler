@@ -44,6 +44,13 @@
             <artifactId>annotations</artifactId>
             <version>3.0.0</version>
         </dependency>
+        <!-- mybatis相关依赖 -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -127,6 +134,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>5.2.4</version>
+                <configuration>
+                    <url>jdbc:h2:file:D:/java/produce/yinghe/xiedaimale-crawler/news</url>
+                    <user>root</user>
+                    <password>123456</password>
+                </configuration>
+
             </plugin>
         </plugins>
     </build>
