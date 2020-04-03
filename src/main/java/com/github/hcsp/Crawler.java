@@ -15,33 +15,41 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class Crawler {
+public class Crawler extends Thread {
 
-    CrawlerDao dao = new MybatisCrawlerDao();
+    CrawlerDao dao;
 
-    public void run() throws SQLException, IOException {
-        String link;
-        //先从数据库加载一个链接(拿出来并从数据库种删掉)，能加载到就循环，并处理之
-        while ((link = dao.getNextLinkThenDelete()) != null) {
-            //询问数据库当前链接有么有被处理过
-            if (dao.isLinkProcessed(link)) {
-                continue;
+    public Crawler(CrawlerDao dao) {
+        this.dao = dao;
+    }
+
+    @Override
+    public void run() {
+        try {
+            String link;
+            //先从数据库加载一个链接(拿出来并从数据库种删掉)，能加载到就循环，并处理之
+            while ((link = dao.getNextLinkThenDelete()) != null) {
+                //询问数据库当前链接有么有被处理过
+                if (dao.isLinkProcessed(link)) {
+                    continue;
+                }
+                //关心news.sina.cn
+                if (isInterestingLink(link)) {
+                    System.out.println(link);
+                    Document doc = httpGetAndParseHtml(link);
+                    parseUrlsFromPageAndStoneIntoDatabase(doc);
+                    //如果是新闻页面，那就存入数据库
+                    stoneIntoDatabaseIfItIsNewsPage(doc, link);
+                    dao.insertProcessedLink(link);
+                }
             }
-            //关心news.sina.cn
-            if (isInterestingLink(link)) {
-                System.out.println(link);
-                Document doc = httpGetAndParseHtml(link);
-                parseUrlsFromPageAndStoneIntoDatabase(doc);
-                //如果是新闻页面，那就存入数据库
-                stoneIntoDatabaseIfItIsNewsPage(doc, link);
-                dao.insertProcessedLink(link);
-            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+
     }
 
-    public static void main(String[] args) throws IOException, SQLException {
-        new Crawler().run();
-    }
+
 
     private void parseUrlsFromPageAndStoneIntoDatabase(Document doc) throws SQLException {
         for (Element aTag : doc.select("a")) {
