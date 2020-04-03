@@ -51,7 +51,7 @@ public class MybatisCrawlerDao implements CrawlerDao {
     }
 
     @Override
-    public void insertProcessedLink(String link) {
+    public void insertProcessedLink(String link) throws SQLException {
         Map<String, Object> param = new HashMap<>();
         param.put("tableName", "LINKS_ALREADY_PROCESSED");
         param.put("link", link);
@@ -61,7 +61,7 @@ public class MybatisCrawlerDao implements CrawlerDao {
     }
 
     @Override
-    public void inserLinkToBeProsessed(String link) {
+    public void inserLinkToBeProsessed(String link) throws SQLException {
         Map<String, Object> param = new HashMap<>();
         param.put("tableName", "LINKS_TO_BE_PROCESSED");
         param.put("link", link);

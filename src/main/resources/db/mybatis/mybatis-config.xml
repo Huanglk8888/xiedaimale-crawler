@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+	<settings>
+		<!-- 设置自动驼峰转换		 -->
+		<setting name="mapUnderscoreToCamelCase" value="true" />
+	</settings>
+
 	<!--配置environment环境 -->
 	<environments default="development">
 		<!-- 环境配置1，每个SqlSessionFactory对应一个环境 -->
 		<environment id="development">
 			<transactionManager type="JDBC" />
 			<dataSource type="POOLED">
-				<property name="driver" value="org.h2.Driver" />
-				<property name="url" value="jdbc:h2:file:D:/java/produce/yinghe/xiedaimale-crawler/news" />
+				<property name="driver" value="com.mysql.cj.jdbc.Driver" />
+				<property name="url" value="jdbc:mysql://192.168.217.132:3306/news" />
 				<property name="username" value="root" />
-				<property name="password" value="123456" />
+				<property name="password" value="12345" />
 			</dataSource>
 		</environment>
 
@@ -21,6 +26,7 @@
 	<mappers>
 		<!--直接映射到相应的mapper文件 -->
 		<mapper resource="db/mybatis/MyMapper.xml"/>
+		<mapper resource="db/mybatis/MockMapper.xml"/>
 	</mappers>
 
 
